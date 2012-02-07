@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Color</title>
+
+
+	<style>
+		body {
+			font-family: monospace;
+		}
+
+		section {
+			margin: 40px;
+			padding: 0;
+			display: block;
+			position: relative;
+		}
+	
+		.colorRect {
+			position: relative;
+			display: block;
+			width: 300px;
+			height: 25px;
+			background-color: #000000;
+		}
+		
+		#interpolateRect1 { background-color: #FF0000; }
+		#interpolateRect2 { background-color: #00FF00; }
+		#interpolateRect3 { background-color: #0000FF; }
+		#interpolateRect4 { background-color: #000000; }
+		
+		#brightnessRect { background-color: #FF0000; }
+		
+		#hslRect { height:100px; }
+		
+		.slider {
+			position: relative;
+			display: block;
+			width: 300px;
+			height: 16px;
+			margin: 4px 0px 20px 0px;
+		}
+
+		.slider:last-child {
+			margin-bottom: 0px;
+		}
+				
+		.sliderTrack {
+			position: absolute;
+			display: block;
+			top: 4px;
+			width: 300px;
+			height: 16px;
+			background-color: #ccc;
+		}
+		
+		.sliderKnob {
+			position: absolute;
+			display: block;
+			width: 36px;
+			height: 24px;
+			background-color: #666;
+		}
+
+		
+		input {
+			display: inline;
+		}
+		
+		.tdlabel { padding-right: 10px; vertical-align: middle; }
+		.tdcolor { width: 100px; height:50px;}
+	</style>
+	
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script src="js/jquery.drag.js"></script>
+	<script src="js/disbranded.color.js"></script>
+	
+	
+	<script>
+		$(function() {
+			$('.slider').append('<div class="sliderTrack"></div>');
+			$('.slider').append('<div class="sliderKnob"></div>');
+		
+			var dragBounds = { x:0, y:0, width:300 - $('.sliderKnob').width(), height:0 };
+			$('.sliderKnob').drag({
+					container: dragBounds,
+					onDragUpdate: onSliderUpdate
+				});
+			
+			function onSliderUpdate(evt) {
+				var x = parseInt(evt.target.css('left'));
+				var p = (x - dragBounds.x) / (dragBounds.width - dragBounds.x);
+				var parent = evt.target.parent().attr('id');
+				if (parent == 'interpolateSlider') {
+					interpolate(p);
+				} else if (parent.indexOf('hsl') == 0) {
+					updateHSL(p, parent);
+				} else if (parent == 'brightnessSlider') {
+					updateBrightness(p);
+				}
+			}
+			
+			function interpolate(p) {
+				$('#interpolateRect1').css('background-color', disbranded.Color.toHex( disbranded.Color.interpolateColor(0xFF0000, 0xFFFF00, p) ));
+				$('#interpolateRect2').css('background-color', disbranded.Color.toHex( disbranded.Color.interpolateColor(0x00FF00, 0xFF00FF, p) ));
+				$('#interpolateRect3').css('background-color', disbranded.Color.toHex( disbranded.Color.interpolateColor(0x0000FF, 0x00FFFF, p) ));
+				$('#interpolateRect4').css('background-color', disbranded.Color.toHex( disbranded.Color.interpolateColor(0x000000, 0xFFFFFF, p) ));
+			}
+			
+			function convert() {
+				testColor.setColor($('#inputColor').attr('value'));
+				$('#outputHEX' ).html(testColor.getHex());
+				$('#outputRGB' ).html(testColor.getRGB());
+				$('#outputRGBA').html(testColor.getRGBA());
+				$('#outputRGBP' ).html(testColor.getRGBPercent());
+				$('#outputRGBAP').html(testColor.getRGBAPercent());
+				$('#outputHSL' ).html(testColor.getHSL());
+				$('#outputHSLA').html(testColor.getHSLA());
+				return false;
+			}
+			
+			$('#formConvert').submit(convert);
+			var testColor = new disbranded.Color();
+			convert();
+			
+
+			var hslColor = new disbranded.Color('hsl(180, 50%, 50%)');
+			$('#hslRect').css('background-color', hslColor.getHex());
+			var hslNums = { H:0.5, S:0.5, L:0.5 };
+			$('#hslH .sliderKnob').css('left', dragBounds.width * hslNums.H);
+			$('#hslS .sliderKnob').css('left', dragBounds.width * hslNums.S);
+			$('#hslL .sliderKnob').css('left', dragBounds.width * hslNums.L);
+					
+			function updateHSL(perc, update) {				
+				if (update == 'hslH') hslNums.H = perc;
+				if (update == 'hslS') hslNums.S = perc;
+				if (update == 'hslL') hslNums.L = perc;
+				hslColor.setColor('hsl('+ Math.round(hslNums.H * 360) +','+ (hslNums.S * 100) +'%,'+ (hslNums.L * 100) +'%)');
+				$('#hslRect').css('background-color', hslColor.getHex());
+				$('#hslTitle').html('HSL: ' + hslColor.getHSL());
+			}
+			updateHSL(0.5);
+			
+			var x11 = disbranded.Color.x11;
+			for (var k in x11) {
+				$('#x11').append('<tr><td class="tdlabel">'+ k +'</td><td id="color_'+ k +'" class="tdcolor"></td></tr>');
+				$('#color_' + k).css('background-color', x11[k]);
+			}
+			
+			var brightnessColor = new disbranded.Color($('#brightnessRect').css('background-color'));
+			$('#brightnessSlider .sliderKnob').css('left', 0.5 * dragBounds.width);
+			function updateBrightness(perc) {
+				var n = disbranded.Color.toBrightness(brightnessColor.getColor(), perc * 2);
+				$('#brightnessRect').css('background-color', disbranded.Color.toHex(n));
+			}
+			
+			
+			var s = new iScroll('container');
+		});
+ 	</script>
+</head>
+
+<body>
+
+	<section>
+		<p>interpolateColor():</p>
+		<div id="interpolateRect1" class="colorRect"></div>
+		<div id="interpolateRect2" class="colorRect"></div>
+		<div id="interpolateRect3" class="colorRect"></div>
+		<div id="interpolateRect4" class="colorRect"></div>
+		<div id="interpolateSlider" class="slider"></div>
+	</section>
+	
+	<section>
+		<p>setBrightness():</p>
+		<div id="brightnessRect" class="colorRect"></div>
+		<div id="brightnessSlider" class="slider"></div>
+	</section>
+	
+	<section>
+		<form id="formConvert">setColor(<input type="text" id="inputColor" />) <button type="submit">convert</button></formp>
+		<table>
+			<tr><td class="tdlabel">hex:</td><td id="outputHEX"></td></tr>
+			<tr><td class="tdlabel">rgb:</td><td id="outputRGB"></td></tr>
+			<tr><td class="tdlabel">rgba:</td><td id="outputRGBA"></td></tr>
+			<tr><td class="tdlabel">rgb %:</td><td id="outputRGBP"></td></tr>
+			<tr><td class="tdlabel">rgba %:</td><td id="outputRGBAP"></td></tr>
+			<tr><td class="tdlabel">hsl:</td><td id="outputHSL"></td></tr>
+			<tr><td class="tdlabel">hsla:</td><td id="outputHSLA"></td></tr>
+		</table>
+	</section>
+	
+	<section>
+		<p id="hslTitle">HSL:</p>
+		<div id="hslRect" class="colorRect"></div>
+		<div id="hslH" class="slider"></div>
+		<div id="hslS" class="slider"></div>
+		<div id="hslL" class="slider"></div>
+	</section>
+	
+	<section class"container">
+		<table id="x11"></table>
+	</section>
+
+
+
+</body>
+</html>

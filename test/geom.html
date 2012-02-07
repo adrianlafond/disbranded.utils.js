@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>geom</title>
+
+	<style>	
+		div {
+			position: absolute;
+			top: 0; left: 0;
+		}
+
+		.red { background: #f00; background: rgba(255, 0, 0, 0.5); }
+		.green { background: #0f0; background: rgba(0, 255, 0, 0.5); }
+		.blue { background: #00f; background: rgba(0, 0, 255, 0.5); }
+		.yellow { background: #ff0; background: rgba(255, 255, 0, 0.5); }
+		.purple { background: #f0f; background: rgba(255, 0, 255, 0.5); }
+		.aqua { background: #0ff; background: rgba(0, 255, 255, 0.5); }
+
+		.stroke { border: 2px dotted black; margin:-2px; };
+	</style>
+	
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script src="js/mootools-class-1.4.1-min.js"></script>
+	<script src="js/disbranded.EventDispatcher.js"></script>
+	<script src="js/disbranded.geom.js"></script>
+	<script src="js/disbranded.Timer.js"></script>
+	<script src="js/disbranded.Tween.js"></script>
+	
+	
+	<script>
+	$(function() {
+
+		$.fn.x = function(xpos) {
+			if (xpos == undefined) {
+				return parseInt(this.css('left'));
+			}
+			this.css('left', xpos + 'px');
+			return this;
+		};
+
+		$.fn.y = function(ypos) {
+			if (ypos == undefined) {
+				return parseInt(this.css('top'));
+			}
+			this.css('top', ypos + 'px');
+			return this;
+		};
+
+		$.fn.rect = function(rect) {
+			if (rect == undefined) {
+				return new disbranded.Rectangle(this.x(), this.y(), this.width(), this.height());
+			}
+			this.x(rect.x());
+			this.y(rect.y());
+			this.width(rect.width());
+			this.height(rect.height());
+			return this;
+		}
+		
+		var body = $('body');
+		body.append('<div class="red" id="rect1"><div>');
+		body.append('<div class="blue" id="rect2"><div>');
+		body.append('<div class="stroke" id="rect3"></div>');
+		
+		$('#rect1').rect(new disbranded.Rectangle(100, 100, 400, 400));
+		$('#rect2').rect(new disbranded.Rectangle(200, 200, 400, 400));
+		
+		var r1 = $('#rect1').rect();
+		var r2 = $('#rect2').rect();
+		$('#rect3').rect(r1.intersection(r2));
+
+		var tween = null;
+		$(document).bind("mousedown", function(e) {
+			if (tween != null) {
+				tween.removeListener(disbranded.Tween.START, onTweenEvent);
+				//tween.removeListener(disbranded.Tween.UPDATE, onTweenEvent);
+				tween.removeListener(disbranded.Tween.COMPLETE, onTweenEvent);
+				tween.kill();
+				//console.log("tween.hasListener(disbranded.Tween.START) = " + tween.hasListener(disbranded.Tween.START));
+				tween = null;
+			}
+			// if (tween != null && tween.percent() < 1) {
+			// 	tween.paused(!tween.paused());
+			// 	return;
+			// }
+			tween = new disbranded.Tween({
+				x1:[$('#rect1').x(), e.pageX],
+				y1:[$('#rect1').y(), e.pageY],
+				//delay: 1000,
+				//yoyo: true
+				onStart: function(tween) { /*console.log('callback: Tween.onStart()');*/ },
+				onComplete: function(tween) { /*console.log('callback: Tween.onComplete()');*/ },
+				onUpdate: onTweenUpdate
+			});
+			tween.addListener(disbranded.Tween.START, onTweenEvent);
+			//tween.addListener(disbranded.Tween.UPDATE, onTweenEvent);
+			tween.addListener(disbranded.Tween.COMPLETE, onTweenEvent);
+			
+			function onTweenEvent(e) {
+				// console.log('event: ' + e.type +' '+ e.target.percent());
+			}
+			
+			function onTweenUpdate(tween) {
+				$('#rect1').x(tween.value('x1'));
+				$('#rect1').y(tween.value('y1'));
+				$('#rect2').x($(window).width() - tween.value('x1'));
+				$('#rect2').y($(window).height() - tween.value('y1'));
+				r1.x($('#rect1').x());
+				r1.y($('#rect1').y());
+				r2.x($('#rect2').x());
+				r2.y($('#rect2').y());
+				$('#rect3').rect(r1.intersection(r2));
+				//if (tween.percent() >= 0.5) tween.reverse();
+			}
+		});
+		
+		/*
+		var hello = "hello";
+		var now = (new Date()).valueOf();
+		function onTimer(timer) {
+			console.log(hello, (new Date()).valueOf() - now, timer.ticks());
+		}
+		var timer = new disbranded.Timer();
+		timer.fps(30);
+		timer.onTick = onTimer;
+		
+		$(document).bind("mousedown", function(e) {
+			if(timer.paused()) {
+				timer.play();
+			} else {
+				timer.pause();
+			}
+		});
+		*/
+	});
+	</script>
+
+</head>
+
+<body>
+
+
+
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Timer</title>
+
+
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script src="js/mootools-class-1.4.1-min.js"></script>
+	<script src="js/disbranded.EventDispatcher.js"></script>
+	<script src="js/disbranded.Timer.js"></script>
+
+	<script>
+		$(function() {			
+			var timer1 = new disbranded.Timer(100, 0).fps(30);
+			var timer2 = new disbranded.Timer(100, 24).fps(4);
+			
+			//timer1.onTimerTick = timer2.onTimerTick = tick;
+			timer1.addListener(disbranded.Timer.TIMER_TICK, tick);
+			timer2.addListener(disbranded.Timer.TIMER_TICK, tick);
+			
+			//disbranded.Timer.tick(100, 24, tick);
+			
+			function tick(evt) {
+				var timer = (evt instanceof disbranded.Timer) ? evt : evt.target;
+				var div = (timer === timer1) ? '#test1' : '#test2';
+				$(div + ' p').html('TICKS: ' + timer.ticks() +'/'+ timer.repeatTicks() +' / FPS:' + timer.fps());
+			}
+			
+			$('#test1 .btnPlay').click(function() { timer1.play(); });
+			$('#test2 .btnPlay').click(function() { timer2.play(); });
+			
+			$('#test1 .btnPause').click(function() { timer1.pause(); });
+			$('#test2 .btnPause').click(function() { timer2.pause(); });
+			
+			$('#test1 .btnReset').click(function() { timer1.stop(); tick(timer1); });
+			$('#test2 .btnReset').click(function() { timer2.stop(); tick(timer2); });
+		});
+
+ 	</script>
+</head>
+
+<body>
+
+	<section>
+		<div id="test1" class="test">
+			<p id="output">TICKS: -</p>
+
+			<button class="btnPlay" type="button">PLAY</button>
+			<button class="btnPause" type="button">PAUSE</button>
+			<button class="btnReset" type="button">RESET</button>
+		</div>
+	</section>
+	<section>
+		<div id="test2" class="test">
+			<p id="output">TICKS: -</p>
+
+			<button class="btnPlay" type="button">PLAY</button>
+			<button class="btnPause" type="button">PAUSE</button>
+			<button class="btnReset" type="button">RESET</button>
+		</div>
+	</section>
+	
+
+
+</body>
+</html>

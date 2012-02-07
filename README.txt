@@ -1,0 +1,1 @@
+Various utils-type classes I have been working on. Most use MooTools Class, but I may create versions that use something else for a class structure.
