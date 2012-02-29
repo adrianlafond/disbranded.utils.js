@@ -264,6 +264,11 @@ disbranded.ImageLoader = function(options) {
 			_add(src, id, 'push');
 			return this;
 		},
+
+		/**
+		 * Alternate name for push()
+		 */
+		add: this.push,
 		
 		/**
 		 * Adds image(s) to the beginning of the images list (will load first).
