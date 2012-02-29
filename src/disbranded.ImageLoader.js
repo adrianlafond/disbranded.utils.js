@@ -1,6 +1,11 @@
 if (!disbranded) var disbranded = {};
 
-disbranded.ImageLoader = function() {
+
+/**
+ * Loads images. For publi API, scroll down to the return {}, or
+ * just search for 'Public API'.
+ */
+disbranded.ImageLoader = function(options) {
 	var _imgsArr = [];
 	var _imgsObj = {};
 	var _uid = 0;
@@ -37,7 +42,7 @@ disbranded.ImageLoader = function() {
 					_removeImage(_imgsObj[id].src, id);
 				}
 			} else {
-				id = 'img-' + _getUid();
+				id = '__auto_unique_id-' + _getUid();
 			}
 
 			//create and add new object
@@ -55,8 +60,9 @@ disbranded.ImageLoader = function() {
 	
 	
 	var _removeImage = function(src, id) {
+		var idPatt = /__auto_unique_id-/;
 		for (var i = 0, len = _imgsArr.length; i < len; i++) {
-			if (_imgsArr[i].src === src && _imgsArr[i].id === id) {
+			if (_imgsArr[i].src === src && (idPatt.test(_imgsArr[i].id) || _imgsArr[i].id === id)) {
 				_imgsArr[i].img.src = '';
 				_imgsArr.splice(i, 1);
 				delete _imgsObj[id];
@@ -70,7 +76,7 @@ disbranded.ImageLoader = function() {
 	var _add = function(src, id, addFn) {
 		if (_isArray(src)) {
 			for (var i = 0, len = src.length; i < len; i++) {
-				_addImage(array[i].src, array[i].id, addFn);
+				_addImage(src[i].src, src[i].id, addFn);
 			}
 		} else {
 			_addImage(src, id, addFn);
@@ -80,7 +86,7 @@ disbranded.ImageLoader = function() {
 	var _remove = function(src, id) {
 		if (_isArray(src)) {
 			for (var i = 0, len = src.length; i < len; i++) {
-				_removeImage(array[i].src, array[i].id);
+				_removeImage(src[i].src, src[i].id);
 			}
 		} else {
 			_removeImage(src, id);
@@ -178,22 +184,20 @@ disbranded.ImageLoader = function() {
 		if (_onStartCB) {
 			_onStartCB();
 		}
-		
-		_loading = false;
-		_complete = true;
+
 		_completeNum = 0;
 		for (var i = 0, len = _imgsArr.length; i < len; i++) {
 			if (_imgsArr[i].complete) {
 				_completeNum += 1;
 			} else {
-				_loading = true;
-				_complete = false;
 				_imgsArr[i].img.onabort = _onAbort;
 				_imgsArr[i].img.onerror = _onError;
 				_imgsArr[i].img.onload = _onLoad;
 				_imgsArr[i].img.src = _imgsArr[i].src;
 			}
-		}
+		}		
+		_loading = _completeNum > 0;
+		_complete = _completeNum == 0;
 	};
 	
 	
@@ -241,54 +245,133 @@ disbranded.ImageLoader = function() {
 	
 	
 	
-	// Public API
+	if (typeof options !== 'undefined' && _isArray(options.images)) {
+		_load(options);
+	}
+	
+	
+	
+	/**
+	 * Public API
+	 */
 	return {
+		/**
+		 * Adds image(s) to the end of the images list (will load last).
+		 * @param src can be either a single URL or an array of { url:[String]}[, id:[String] }
+		 * @param id optional; is same as previous id, new image will overwrite old
+		 */
 		push: function(src, id) {
 			_add(src, id, 'push');
+			return this;
 		},
 		
+		/**
+		 * Adds image(s) to the beginning of the images list (will load first).
+		 * @param src can be either a single URL or an array of { url:[String]}[, id:[String] }
+		 * @param id optional; is same as previous id, new image will overwrite old
+		 */
 		unshift: function(src, id) {
 			_add(src, id, 'unshift');
+			return this;
 		},
 		
+		/**
+		 * Removes an image from the images list if
+		 * 1) @src matches
+		 * AND
+		 * 2) @id matches OR @id was auto generated
+		 */
 		remove: function(src, id) {
 			_remove(src, id);
+			return this;
 		},
 		
+		/**
+		 * @returns length of images array
+		 */
 		length: function() {
 			return _length;
 		},
 		
+		/**
+		 * @returns number of images that have completed loading
+		 */
 		completeLength: function() {
 			return _completeNum;
 		},
 		
+		/**
+		 * @returns boolean whether ImageLoader is currently loading
+		 */
 		loading: function() {
 			return _loading;
 		},
 		
+		/**
+		 * @returns boolean whether ImageLoader has finished loading
+		 */
 		complete: function() {
 			return _complete;
 		},
 		
+		/**
+		 * Loads all images in the images array.
+		 * @param options = {} with optional properties:
+		 *		images: Array of objects in format { url:[String]}[, id:[String] }
+		 *			that will be pushed onto images array.
+		 *		onStart: callback function()
+		 *		onChildComplete: callback function(Image, id, index)
+		 *		onComplete: callback function()
+		 *		onProgress: callback function(completeLength, length)
+		 *		onAbort: callback function(id, index)
+		 * 		onError: callback function(id, index)
+		 *		onCancel: callback function()
+		 */
 		load: function(options) {
 			_load(options);
+			return this;
 		},
 		
+		/**
+		 * Cancels any loading currently in progress.
+		 */
 		cancel: function() {
 			_cancel();
+			return this;
 		},
 		
+		/**
+		 * @returns Image by id
+		 */
 		getImageById: function(id) {
-			return _imgsObj[id] || null;
+			return _imgsObj[id].img || null;
 		},
 		
+		/**
+		 * @returns Image by index
+		 */
 		getImageByIndex: function(index) {
-			return _imgsArr[index] || null;
+			return _imgsArr[index].img || null;
 		},
 		
+		/**
+		 * Set a callback function.
+		 * @param {String} start, childComplete, complete, progress, abort, error, cancel
+		 * @param callbackFn = the function to callback
+		 * @see load()
+		 */
 		setCallback: function(eventType, callbackFn) {
 			_setCallback(eventType, callbackFn);
+			return this;
 		}
 	}
 };
+
+
+/**
+ * Allows instaniating and loading images in one line:
+ * var loader = disbranded.ImageLoader.load({ images:[images], onComplete:onCompleteFn });
+ */
+disbranded.ImageLoader.load = function(options) {
+	return new disbranded.ImageLoader(options);
+}
