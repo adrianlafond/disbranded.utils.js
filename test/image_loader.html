@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>image loader</title>
+	
+	<style>
+	input { display:block; }
+	</style>
+
+	<script src="../src/disbranded.ImageLoader.js"></script>
+</head>
+
+<body>
+
+<form>
+	<input type="text" name="img0" value="http://farm4.staticflickr.com/3109/2611867365_42d1bd600b_z.jpg">
+	<input type="text" name="img1" value="http://farm6.staticflickr.com/5309/5622491371_c6fa4ecc15_z.jpg">
+	<input type="text" name="img2" value="http://farm5.staticflickr.com/4118/4908180537_0011d8fd69_z.jpg">
+	<input type="text" name="img3" value="http://farm5.staticflickr.com/4081/4857625373_7725e4320b_z.jpg">
+	<input type="text" name="img4" value="http://farm2.staticflickr.com/1312/4721645098_9671410713_z.jpg">	
+	<input type="submit" name="submit" value="Load Images">
+</form>
+
+
+<p>Images loaded: <span id="loadedNum">0</span> / <span id="imagesTotal">5</span></p>
+
+<div id="images"></div>
+
+
+
+<script>
+	var form = document.forms[0];
+	var loader = new disbranded.ImageLoader();
+	
+	form["submit"].onclick = function() {
+		for (var i = 0; i < 5; i++) {
+			loader.push(form['img' + i].value, 'img' + i);
+		}
+		loader.load({
+			onProgress: function(n, len) {
+				document.getElementById('loadedNum').innerHTML = n;
+				document.getElementById('imagesTotal').innerHTML = len;
+			},
+			onError: function(id, index) {
+				//console.log('error: '+id+' '+index);
+			},
+			onChildComplete: function(img, id, index) {
+				//console.log('complete: ' + id);
+			},
+			onComplete: function() {
+				//console.log('complete');
+				var html = '';
+				for (var i = 0; i < loader.length(); i++) {
+					var img = loader.getImageByIndex(i);
+					if (img.complete) {
+						html += '<img src="'+ img.src +'" alt="">\n';
+					}					
+				}
+				document.getElementById('images').innerHTML = html;
+			}
+		});
+		return false;
+	}
+</script>
+
+</body>
+</html>
