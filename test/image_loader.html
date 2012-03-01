@@ -14,11 +14,11 @@
 <body>
 
 <form>
-	<input type="text" name="img0" value="http://farm4.staticflickr.com/3109/2611867365_42d1bd600b_z.jpg">
-	<input type="text" name="img1" value="http://farm6.staticflickr.com/5309/5622491371_c6fa4ecc15_z.jpg">
-	<input type="text" name="img2" value="http://farm5.staticflickr.com/4118/4908180537_0011d8fd69_z.jpg">
-	<input type="text" name="img3" value="http://farm5.staticflickr.com/4081/4857625373_7725e4320b_z.jpg">
-	<input type="text" name="img4" value="http://farm2.staticflickr.com/1312/4721645098_9671410713_z.jpg">	
+	<input type="text" name="img0" value="http://farm4.staticflickr.com/3109/2611867365_42d1bd600b_b.jpg">
+	<input type="text" name="img1" value="http://farm6.staticflickr.com/5309/5622491371_c6fa4ecc15_b.jpg">
+	<input type="text" name="img2" value="http://farm5.staticflickr.com/4118/4908180537_0011d8fd69_b.jpg">
+	<input type="text" name="img3" value="http://farm5.staticflickr.com/4081/4857625373_7725e4320b_b.jpg">
+	<input type="text" name="img4" value="http://farm2.staticflickr.com/1312/4721645098_9671410713_b.jpg">	
 	<input type="submit" name="submit" value="Load Images">
 </form>
 
@@ -31,17 +31,21 @@
 
 <script>
 	var form = document.forms[0];
-	var loader;// = new disbranded.ImageLoader();
+	var loader = new disbranded.ImageLoader();
 	
 	form["submit"].onclick = function() {
 		var arr = [];
+		var killcache = '?killcache=' + (new Date()).valueOf();
 		for (var i = 0; i < 5; i++) {
-			//loader.push(form['img' + i].value, 'img' + i);
-			arr.push({ src:form['img' + i].value, id:'img' + i });
+			loader.unshift(form['img' + i].value + killcache, 'img' + i);
+			//arr.push({ src:form['img' + i].value + killcache, id:'img' + i });
 		}
-		loader = disbranded.ImageLoader.load({			
-		//loader.load({
-			images: arr,
+		//loader.remove(form['img0'].value + killcache);
+		//loader.remove('img0');
+		
+		//loader = disbranded.ImageLoader.load({			
+		loader.load({
+			//images: arr,
 			onProgress: function(n, len) {
 				document.getElementById('loadedNum').innerHTML = n;
 				document.getElementById('imagesTotal').innerHTML = len;
@@ -51,6 +55,7 @@
 			},
 			onChildComplete: function(img, id, index) {
 				console.log('complete: ' + id);
+				//loader.cancel();
 			},
 			onComplete: function() {
 				console.log('complete');
@@ -58,7 +63,7 @@
 				for (var i = 0; i < loader.length(); i++) {
 					var img = loader.getImageByIndex(i);
 					if (img.complete) {
-						html += '<img src="'+ img.src +'" alt="">\n';
+						html += '<img src="'+ img.img.src +'" alt="">\n';
 					}					
 				}
 				document.getElementById('images').innerHTML = html;

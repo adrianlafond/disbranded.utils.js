@@ -59,13 +59,13 @@ disbranded.ImageLoader = function(options) {
 	};
 	
 	
-	var _removeImage = function(src, id) {
+	var _removeImage = function(srcOrId) {
 		var idPatt = /__auto_unique_id-/;
 		for (var i = 0, len = _imgsArr.length; i < len; i++) {
-			if (_imgsArr[i].src === src && (idPatt.test(_imgsArr[i].id) || _imgsArr[i].id === id)) {
+			if (srcOrId === _imgsArr[i].id || (_imgsArr[i].src === srcOrId && idPatt.test(_imgsArr[i].id))) {
 				_imgsArr[i].img.src = '';
 				_imgsArr.splice(i, 1);
-				delete _imgsObj[id];
+				delete _imgsObj[_imgsArr[i].id];
 				_length -= 1;
 				break;
 			}
@@ -83,13 +83,13 @@ disbranded.ImageLoader = function(options) {
 		}
 	};
 	
-	var _remove = function(src, id) {
-		if (_isArray(src)) {
-			for (var i = 0, len = src.length; i < len; i++) {
-				_removeImage(src[i].src, src[i].id);
+	var _remove = function(srcOrId) {
+		if (_isArray(srcOrId)) {
+			for (var i = 0, len = srcOrId.length; i < len; i++) {
+				_removeImage(srcOrId[i]);
 			}
 		} else {
-			_removeImage(src, id);
+			_removeImage(srcOrId);
 		}
 	};
 	
@@ -202,7 +202,7 @@ disbranded.ImageLoader = function(options) {
 	
 	
 	var _cancel = function() {
-		for (var i = 0, len = _imgArr.length; i < len; i++) {
+		for (var i = 0, len = _imgsArr.length; i < len; i++) {
 			if (!_imgsArr[i].complete) {
 				_imgsArr[i].img.src = '';
 			}
@@ -268,7 +268,9 @@ disbranded.ImageLoader = function(options) {
 		/**
 		 * Alternate name for push()
 		 */
-		add: this.push,
+		add: function(src, id) {
+			return this.push(src, id);
+		},
 		
 		/**
 		 * Adds image(s) to the beginning of the images list (will load first).
@@ -282,12 +284,13 @@ disbranded.ImageLoader = function(options) {
 		
 		/**
 		 * Removes an image from the images list if
-		 * 1) @src matches
-		 * AND
-		 * 2) @id matches OR @id was auto generated
+		 * 1) @srcOrId matches image.src AND image.id was auto generated
+		 * OR
+		 * 2) @srcOrId matches image.id
+		 * @param srcOrId can also be an array of @srcOrId values
 		 */
-		remove: function(src, id) {
-			_remove(src, id);
+		remove: function(srcOrId) {
+			_remove(srcOrId);
 			return this;
 		},
 		
@@ -346,17 +349,35 @@ disbranded.ImageLoader = function(options) {
 		},
 		
 		/**
-		 * @returns Image by id
+		 * @returns clone of object in images with @id 
 		 */
 		getImageById: function(id) {
-			return _imgsObj[id].img || null;
+			if (_imgsObj.hasOwnProperty(id)) {
+				var obj = _imgsObj[id];
+				return {
+					img: obj.img,
+					src: obj.src,
+					id: obj.id,
+					complete: obj.complete
+				};
+			}
+			return null;
 		},
 		
 		/**
-		 * @returns Image by index
+		 * @returns clone of object in images with @index 
 		 */
 		getImageByIndex: function(index) {
-			return _imgsArr[index].img || null;
+			if (_imgsArr.hasOwnProperty(index)) {
+				var obj = _imgsArr[index];
+				return {
+					img: obj.img,
+					src: obj.src,
+					id: obj.id,
+					complete: obj.complete
+				};
+			}
+			return null;
 		},
 		
 		/**
