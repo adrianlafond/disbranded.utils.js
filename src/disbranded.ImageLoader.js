@@ -1,8 +1,8 @@
-if (!disbranded) var disbranded = {};
+if (typeof disbranded === 'undefined') var disbranded = {};
 
 
 /**
- * Loads images. For publi API, scroll down to the return {}, or
+ * Loads images. For public API, scroll down to the return {}, or
  * just search for 'Public API'.
  */
 disbranded.ImageLoader = function(options) {
@@ -258,7 +258,7 @@ disbranded.ImageLoader = function(options) {
 		/**
 		 * Adds image(s) to the end of the images list (will load last).
 		 * @param src can be either a single URL or an array of { url:[String]}[, id:[String] }
-		 * @param id optional; is same as previous id, new image will overwrite old
+		 * @param id optional; if same as previous id, new image will overwrite old
 		 */
 		push: function(src, id) {
 			_add(src, id, 'push');
@@ -274,7 +274,7 @@ disbranded.ImageLoader = function(options) {
 		
 		/**
 		 * Adds image(s) to the beginning of the images list (will load first).
-		 * @param src can be either a single URL or an array of { url:[String]}[, id:[String] }
+		 * @param src can be either a single URL or an array of { url:String[, id:String] }
 		 * @param id optional; is same as previous id, new image will overwrite old
 		 */
 		unshift: function(src, id) {
@@ -383,7 +383,7 @@ disbranded.ImageLoader = function(options) {
 		/**
 		 * Set a callback function.
 		 * @param {String} start, childComplete, complete, progress, abort, error, cancel
-		 * @param callbackFn = the function to callback
+		 * @param callbackFn = the callback function; set to null to remove
 		 * @see load()
 		 */
 		setCallback: function(eventType, callbackFn) {
